@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Install parent POM
+        run: mvn -B -N install
+
+      - name: Initialize Paper NMS mappings
+        run: mvn -B -f plugman-paper/pom.xml paper-nms:init
+
+      - name: Build with Maven
+        run: mvn -B clean package
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugmanx-artifacts
+          path: |
+            target/PlugManX.jar
+            target/PlugManX-*.jar
+          if-no-files-found: warn
